@@ -31,7 +31,7 @@ namespace VoidFogNerf
                 IL.RoR2.FogDamageController.FixedUpdate += (il) =>
                 {
                     ILCursor c = new ILCursor(il);
-                    c.GotoNext(
+                    c.TryGotoNext(
                         x => x.MatchCallOrCallvirt<CharacterBody>("get_healthComponent"),
                         x => x.MatchCallOrCallvirt<HealthComponent>("get_fullCombinedHealth")
                     );
@@ -40,7 +40,7 @@ namespace VoidFogNerf
                     {
                         return key.healthComponent.combinedHealth;
                     });
-                    c.GotoNext(
+                    c.TryGotoNext(
                         x => x.MatchDup(),
                         x => x.MatchLdcI4(0x42),
                         x => x.MatchStfld<DamageInfo>("damageType")
