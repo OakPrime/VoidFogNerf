@@ -1,4 +1,5 @@
 using BepInEx;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using RoR2;
 using System;
@@ -20,7 +21,7 @@ namespace VoidFogNerf
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "OakPrime";
         public const string PluginName = "VoidFogNerf";
-        public const string PluginVersion = "0.0.1";
+        public const string PluginVersion = "0.2.0";
 
         //The Awake() method is run at the very start when the game is initialized.
         public void Awake()
@@ -31,15 +32,14 @@ namespace VoidFogNerf
                 {
                     ILCursor c = new ILCursor(il);
                     c.GotoNext(
-                        x => x.MatchCallvirt<CharacterBody>("get_healthComponent()"),
-                        x => x.MatchCallvirt<HealthComponent>("get_fullCombinedHealth()")
+                        x => x.MatchCallOrCallvirt<CharacterBody>("get_healthComponent"),
+                        x => x.MatchCallOrCallvirt<HealthComponent>("get_fullCombinedHealth")
                     );
                     c.RemoveRange(2);
-                    c.EmitDelegate<Func<CharacterBody, float>>((key) =>
+                    c.EmitDelegate<Func<CharacterBody, float>>(key =>
                     {
                         return key.healthComponent.combinedHealth;
                     });
-                    //c.Next.Operand = 2f;
                     c.GotoNext(
                         x => x.MatchDup(),
                         x => x.MatchLdcI4(0x42),
