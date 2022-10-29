@@ -21,7 +21,7 @@ namespace VoidFogNerf
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "OakPrime";
         public const string PluginName = "VoidFogNerf";
-        public const string PluginVersion = "0.2.0";
+        public const string PluginVersion = "1.1.0";
 
         //The Awake() method is run at the very start when the game is initialized.
         public void Awake()
@@ -40,6 +40,9 @@ namespace VoidFogNerf
                     {
                         return key.healthComponent.combinedHealth;
                     });
+                    c.Index++;
+                    c.Emit(OpCodes.Ldc_R4, 2.0f);
+                    c.Emit(OpCodes.Mul);
                     c.TryGotoNext(
                         x => x.MatchDup(),
                         x => x.MatchLdcI4(0x42),
