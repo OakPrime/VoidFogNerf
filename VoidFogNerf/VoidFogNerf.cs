@@ -41,7 +41,7 @@ namespace VoidFogNerf
                         return key.healthComponent.combinedHealth;
                     });
                     c.Index++;
-                    c.Emit(OpCodes.Ldc_R4, 2.0f);
+                    c.Emit(OpCodes.Ldc_R4, 1.3f);
                     c.Emit(OpCodes.Mul);
                     c.TryGotoNext(
                         x => x.MatchDup(),
