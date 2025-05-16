@@ -21,35 +21,44 @@ namespace VoidFogNerf
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "OakPrime";
         public const string PluginName = "VoidFogNerf";
-        public const string PluginVersion = "1.1.1";
+        public const string PluginVersion = "1.2.0";
 
         //The Awake() method is run at the very start when the game is initialized.
         public void Awake()
         {
             try
             {
+                VFNConfig.InitializeConfig();
                 IL.RoR2.FogDamageController.MyFixedUpdate += (il) =>
                 {
                     ILCursor c = new ILCursor(il);
-                    c.TryGotoNext(
-                        x => x.MatchCallOrCallvirt<CharacterBody>("get_healthComponent"),
-                        x => x.MatchCallOrCallvirt<HealthComponent>("get_fullCombinedHealth")
-                    );
-                    c.RemoveRange(2);
-                    c.EmitDelegate<Func<CharacterBody, float>>(key =>
+                    if (VFNConfig.useCurrentHealth.Value)
                     {
-                        return key.healthComponent.combinedHealth;
-                    });
-                    c.Index++;
-                    c.Emit(OpCodes.Ldc_R4, 1.3f);
-                    c.Emit(OpCodes.Mul);
+                        c.TryGotoNext(
+                            x => x.MatchCallOrCallvirt<CharacterBody>("get_healthComponent"),
+                            x => x.MatchCallOrCallvirt<HealthComponent>("get_fullCombinedHealth")
+                        );
+                        c.Index++;
+                        c.RemoveRange(1);
+                        c.EmitDelegate<Func<HealthComponent, float>>(healthComponent =>
+                        {
+                            return healthComponent.combinedHealth;
+                        });
+                        c.Index++;
+                        c.Emit(OpCodes.Ldc_R4, VFNConfig.fogDamageAmp.Value);
+                        c.Emit(OpCodes.Mul);
+                    }
+
                     c.TryGotoNext(
                         x => x.MatchDup(),
                         x => x.MatchLdcI4(0x42),
                         x => x.MatchCallOrCallvirt(out _)
                     );
-                    c.RemoveRange(4);
-                    
+                    c.Index += 2;
+                    c.EmitDelegate<Func<int, int>>(damageType =>
+                    {
+                        return VFNConfig.damageType;
+                    });
 
                 };
             }
