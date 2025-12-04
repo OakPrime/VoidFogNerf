@@ -21,7 +21,7 @@ namespace VoidFogNerf
         public const string PluginGUID = PluginAuthor + "." + PluginName;
         public const string PluginAuthor = "OakPrime";
         public const string PluginName = "VoidFogNerf";
-        public const string PluginVersion = "1.2.2";
+        public const string PluginVersion = "1.2.3";
 
         //The Awake() method is run at the very start when the game is initialized.
         public void Awake()
@@ -34,10 +34,14 @@ namespace VoidFogNerf
                     ILCursor c = new ILCursor(il);
                     if (VFNConfig.useCurrentHealth.Value)
                     {
-                        c.TryGotoNext(
+                        if (!c.TryGotoNext(
                             x => x.MatchCallOrCallvirt<CharacterBody>("get_healthComponent"),
                             x => x.MatchCallOrCallvirt<HealthComponent>("get_fullCombinedHealth")
-                        );
+                        ))
+                        {
+                            Logger.LogError("TryGoToNext failed to find fullCombinedHealth instructions in method: " + c.Method);
+                            return;
+                        }
                         c.Index++;
                         c.RemoveRange(1);
                         c.EmitDelegate<Func<HealthComponent, float>>(healthComponent =>
@@ -49,12 +53,15 @@ namespace VoidFogNerf
                         c.Emit(OpCodes.Mul);
                     }
 
-                    c.TryGotoNext(
-                        x => x.MatchDup(),
+                    if (!c.TryGotoNext(
                         x => x.MatchLdcI4(0x42),
                         x => x.MatchCallOrCallvirt(out _)
-                    );
-                    c.Index += 2;
+                    ))
+                    {
+                        Logger.LogError("TryGoToNext failed to find damageType instructions in method: " + c.Method);
+                        return;
+                    }
+                    c.Index++;
                     c.EmitDelegate<Func<int, int>>(damageType =>
                     {
                         return VFNConfig.damageType;
